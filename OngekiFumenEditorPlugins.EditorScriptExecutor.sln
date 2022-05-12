@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gemini", "refHost\OngekiFum
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SvgConverter", "refHost\OngekiFumenEditor\Dependences\SvgToXaml\SvgConverter\SvgConverter.csproj", "{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gemini.Modules.ErrorList", "refHost\OngekiFumenEditor\Dependences\gemini\src\Gemini.Modules.ErrorList\Gemini.Modules.ErrorList.csproj", "{4E80DB55-C159-49BF-8CD5-0FE9537ECCC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E80DB55-C159-49BF-8CD5-0FE9537ECCC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E80DB55-C159-49BF-8CD5-0FE9537ECCC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E80DB55-C159-49BF-8CD5-0FE9537ECCC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E80DB55-C159-49BF-8CD5-0FE9537ECCC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +55,7 @@ Global
 		{ED45B10C-EE3B-4ACF-991F-78A55811B6C6} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
 		{8EAD3189-17DD-4726-86EA-29FC16F1F0CD} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
+		{4E80DB55-C159-49BF-8CD5-0FE9537ECCC0} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EE804477-6581-44A9-8C53-8C0B2707A0A7}

@@ -12,5 +12,6 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel
         public List<string> AssemblyLocations { get; set; } = new List<string>();
 
         public bool Optimze { get; set; } = false;
+        public string DisplayFileName { get; set; }
     }
 }

@@ -10,6 +10,6 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel
     public interface IEditorScriptExecutor
     {
         Task<BuildResult> Build(BuildParam param);
-        Task<ExecuteResult> Execute(BuildParam param, FumenVisualEditorViewModel targetEditor);
+        Task<ExecuteResult> Execute(BuildResult buildResult, FumenVisualEditorViewModel targetEditor);
     }
 }

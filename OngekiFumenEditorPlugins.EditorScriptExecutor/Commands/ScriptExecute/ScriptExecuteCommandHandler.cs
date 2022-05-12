@@ -23,17 +23,7 @@ namespace OngekiFumenEditor.Kernel.MiscMenu.Commands
 
         public override async Task Run(Command command)
         {
-            var str = @"
-        using System; 
-        using OngekiFumenEditor.Utils;
 
-        Log.LogDebug(""Hello Script"");
-        ";
-
-            var result = await IoC.Get<IEditorScriptExecutor>().Execute(new BuildParam()
-            {
-                Script = str
-            }, IoC.Get<IEditorDocumentManager>().CurrentActivatedEditor);
         }
     }
 }

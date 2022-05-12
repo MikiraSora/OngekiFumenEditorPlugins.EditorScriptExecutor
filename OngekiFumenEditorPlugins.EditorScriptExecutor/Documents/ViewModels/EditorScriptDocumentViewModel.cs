@@ -5,8 +5,10 @@ using Gemini.Framework.Threading;
 using ICSharpCode.AvalonEdit.Document;
 using OngekiFumenEditor.Modules.FumenVisualEditor.Kernel;
 using OngekiFumenEditor.Modules.FumenVisualEditor.ViewModels;
+using OngekiFumenEditor.Utils;
 using OngekiFumenEditor.Utils.Attributes;
 using OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.Views;
+using OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,8 +32,14 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
         public FumenVisualEditorViewModel CurrentSelectedEditor
         {
             get => currentSelectedEditor;
-            set => Set(ref currentSelectedEditor, value);
+            set
+            {
+                Set(ref currentSelectedEditor, value);
+                NotifyOfPropertyChange(() => IsEnableRun);
+            }
         }
+
+        public bool IsEnableRun => CurrentSelectedEditor is not null;
 
         public void Init()
         {
@@ -68,6 +76,12 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
         {
             try
             {
+                using var _ = StatusBarHelper.BeginStatus("Fumen saving : " + filePath);
+                if (string.IsNullOrWhiteSpace(filePath))
+                {
+                    await DoSaveAs(this);
+                    return;
+                }
                 await File.WriteAllTextAsync(filePath, ScriptDocument.Text);
             }
             catch (Exception e)
@@ -81,19 +95,52 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             IsDirty = true;
         }
 
-        public void OnCheckButtonClicked()
+        private BuildParam GetBuildParam() => new BuildParam
         {
+            Script = ScriptDocument.Text,
+            DisplayFileName = FileName
+        };
 
+        public async void OnCheckButtonClicked()
+        {
+            using var _ = StatusBarHelper.BeginStatus("Script is building ...");
+            var buildResult = await IoC.Get<IEditorScriptExecutor>().Build(GetBuildParam());
+
+            if (buildResult.IsSuccess)
+            {
+                MessageBox.Show("编译成功");
+                return;
+            }
+
+            var errorMsg = string.Join(Environment.NewLine, buildResult.Errors);
+            MessageBox.Show($"编译失败:\n{errorMsg}");
         }
 
-        public void OnRunButtonClicked()
+        public async void OnRunButtonClicked()
         {
+            using var _ = StatusBarHelper.BeginStatus("Script is building ...");
+            var buildResult = await IoC.Get<IEditorScriptExecutor>().Build(GetBuildParam());
 
+            if (!buildResult.IsSuccess)
+            {
+                var errorMsg = string.Join(Environment.NewLine, buildResult.Errors);
+                MessageBox.Show($"编译失败:\n{errorMsg}");
+                return;
+            }
+
+            if (MessageBox.Show("编译成功，是否执行?", default, MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                return;
+
+            using var _2 = StatusBarHelper.BeginStatus("Script is executing ...");
+            var executeResult = await IoC.Get<IEditorScriptExecutor>().Execute(buildResult, CurrentSelectedEditor);
+
+            MessageBox.Show($"执行{(executeResult.Success ? "成功" : $"失败,原因:{executeResult.ErrorMessage}")}");
         }
 
-        public void OnManageDLLsButtonClicked()
+        public async void OnReloadFileButtonClicked()
         {
-
+            if (File.Exists(FilePath))
+                await DoLoad(FilePath);
         }
     }
 }

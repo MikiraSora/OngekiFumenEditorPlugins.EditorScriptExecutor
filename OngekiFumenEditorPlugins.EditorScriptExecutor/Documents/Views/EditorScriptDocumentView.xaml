@@ -21,7 +21,22 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Margin="10" Orientation="Horizontal">
-                <Label VerticalAlignment="Center" Content="编辑器目标" />
+                <Button Padding="10,2,10,2" cal:Message.Attach="OnReloadFileButtonClicked()">
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            VerticalAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            FontFamily="Segoe UI Symbol"
+                            Foreground="GreenYellow">
+                            
+                        </Label>
+                        <Label VerticalAlignment="Center" VerticalContentAlignment="Center">刷新</Label>
+                    </StackPanel>
+                </Button>
+                <Label
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Content="编辑器目标" />
                 <ComboBox
                     Width="150"
                     Margin="10,0,0,0"
@@ -35,14 +50,15 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-
-                <Button Margin="10,0,0,0" Padding="10,2,10,2">管理DLL文件</Button>
             </StackPanel>
             <StackPanel
                 Margin="10"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
-                <Button Margin="10,0,0,0" Padding="10,2,10,2">
+                <Button
+                    Margin="10,0,0,0"
+                    Padding="10,2,10,2"
+                    cal:Message.Attach="OnCheckButtonClicked()">
                     <StackPanel Orientation="Horizontal">
                         <Label
                             VerticalAlignment="Center"
@@ -54,7 +70,11 @@
                         <Label VerticalAlignment="Center" VerticalContentAlignment="Center">检查脚本</Label>
                     </StackPanel>
                 </Button>
-                <Button Margin="10,0,0,0" Padding="10,2,10,2">
+                <Button
+                    Margin="10,0,0,0"
+                    Padding="10,2,10,2"
+                    cal:Message.Attach="OnRunButtonClicked()"
+                    IsEnabled="{Binding IsEnableRun}">
                     <StackPanel Orientation="Horizontal">
                         <Label
                             VerticalAlignment="Center"
