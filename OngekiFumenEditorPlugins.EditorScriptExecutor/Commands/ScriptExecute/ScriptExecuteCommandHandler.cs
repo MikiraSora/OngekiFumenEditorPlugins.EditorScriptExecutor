@@ -21,37 +21,19 @@ namespace OngekiFumenEditor.Kernel.MiscMenu.Commands
             command.Enabled = IoC.Get<IEditorDocumentManager>().CurrentActivatedEditor is not null;
         }
 
-        public override Task Run(Command command)
+        public override async Task Run(Command command)
         {
             var str = @"
-using OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+        using System; 
+        using OngekiFumenEditor.Utils;
 
-namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Resources
-{
-    public class ExampleEditorScript : EditorScriptBase
-    {
-        public override string ScriptName => ""ExampleScript"";
+        Log.LogDebug(""Hello Script"");
+        ";
 
-        public override void OnEditorUndo(ScriptExecutionContext context)
-        {
-            context.Editor.Toast.ShowMessage(""call OnEditorUndo()"");
-        }
-
-        public override void OnExecuteOrEditorRedo(ScriptExecutionContext context)
-        {
-            context.Editor.Toast.ShowMessage(""call OnExecuteOrEditorRedo()"");
-        }
-    }
-}
-";
-
-            IoC.Get<IEditorScriptExecutor>().Execute(str, IoC.Get<IEditorDocumentManager>().CurrentActivatedEditor);
-            return TaskUtility.Completed;
+            var result = await IoC.Get<IEditorScriptExecutor>().Execute(new BuildParam()
+            {
+                Script = str
+            }, IoC.Get<IEditorDocumentManager>().CurrentActivatedEditor);
         }
     }
 }
