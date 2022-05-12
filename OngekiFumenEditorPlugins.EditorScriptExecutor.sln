@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OngekiFumenEditorPlugins.EditorScriptExecutor", "OngekiFumenEditorPlugins.EditorScriptExecutor\OngekiFumenEditorPlugins.EditorScriptExecutor.csproj", "{2540C3BC-5516-419D-B81F-AF198E7EEF6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OngekiFumenEditorPlugins.EditorScriptExecutor", "OngekiFumenEditorPlugins.EditorScriptExecutor\OngekiFumenEditorPlugins.EditorScriptExecutor.csproj", "{2540C3BC-5516-419D-B81F-AF198E7EEF6A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OngekiFumenEditor", "refHost\OngekiFumenEditor\OngekiFumenEditor\OngekiFumenEditor.csproj", "{38576B43-BF8B-4401-AEA0-705B94241536}"
 EndProject
@@ -13,11 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gemini.Modules.Output", "re
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gemini", "refHost\OngekiFumenEditor\Dependences\gemini\src\Gemini\Gemini.csproj", "{8EAD3189-17DD-4726-86EA-29FC16F1F0CD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gemini.Modules.CodeCompiler", "refHost\OngekiFumenEditor\Dependences\gemini\src\Gemini.Modules.CodeCompiler\Gemini.Modules.CodeCompiler.csproj", "{B49D3D1C-DBDD-416F-91B7-842F8DA42EBF}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SvgConverter", "refHost\OngekiFumenEditor\Dependences\SvgToXaml\SvgConverter\SvgConverter.csproj", "{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gemini.Modules.ErrorList", "refHost\OngekiFumenEditor\Dependences\gemini\src\Gemini.Modules.ErrorList\Gemini.Modules.ErrorList.csproj", "{804E799C-6226-485E-BE09-5B9CB2FC17FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,18 +37,10 @@ Global
 		{8EAD3189-17DD-4726-86EA-29FC16F1F0CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EAD3189-17DD-4726-86EA-29FC16F1F0CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EAD3189-17DD-4726-86EA-29FC16F1F0CD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B49D3D1C-DBDD-416F-91B7-842F8DA42EBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B49D3D1C-DBDD-416F-91B7-842F8DA42EBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B49D3D1C-DBDD-416F-91B7-842F8DA42EBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B49D3D1C-DBDD-416F-91B7-842F8DA42EBF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{804E799C-6226-485E-BE09-5B9CB2FC17FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{804E799C-6226-485E-BE09-5B9CB2FC17FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{804E799C-6226-485E-BE09-5B9CB2FC17FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{804E799C-6226-485E-BE09-5B9CB2FC17FA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,9 +48,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{ED45B10C-EE3B-4ACF-991F-78A55811B6C6} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
 		{8EAD3189-17DD-4726-86EA-29FC16F1F0CD} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
-		{B49D3D1C-DBDD-416F-91B7-842F8DA42EBF} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
 		{0B998045-EEB6-4BF9-AF32-44D090ACDE2D} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
-		{804E799C-6226-485E-BE09-5B9CB2FC17FA} = {A58EC02D-8309-4316-AC16-FEA9794D254E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EE804477-6581-44A9-8C53-8C0B2707A0A7}

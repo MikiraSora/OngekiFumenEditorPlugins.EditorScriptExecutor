@@ -1,14 +1,20 @@
 ﻿using Caliburn.Micro;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CSharp;
+using OngekiFumenEditor;
 using OngekiFumenEditor.Modules.FumenVisualEditor.Base;
-using OngekiFumenEditor.Modules.FumenVisualEditor.Kernel;
 using OngekiFumenEditor.Modules.FumenVisualEditor.ViewModels;
 using OngekiFumenEditor.Utils;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,66 +24,131 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class DefaultEditorScriptExecutor : IEditorScriptExecutor
     {
-        private CompilerParameters compilerParameters;
+        private readonly List<MetadataReference> assemblyReferenceList;
+        private readonly CSharpCompilationOptions compilationOptions;
+        private readonly CSharpParseOptions parserOption;
 
         public DefaultEditorScriptExecutor()
         {
-            compilerParameters = new CompilerParameters()
-            {
-                IncludeDebugInformation = true,
-                GenerateInMemory = true
+            assemblyReferenceList = new List<MetadataReference>() {
+                MetadataReference.CreateFromFile(typeof(CodeCompiler).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(App).Assembly.Location),
             };
 
-            var refAssemblies = new List<string> { "System.dll", "System.Core.dll", "Microsoft.CSharp.dll" };
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
-            foreach (var asm in AssemblySource.Instance)
-                refAssemblies.Add(asm.GetAssemblyName());
+            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "mscorlib.dll")));
+            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.dll")));
+            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Core.dll")));
+            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")));
 
-            refAssemblies = refAssemblies.Distinct().ToList();
+            compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: new[]{
+                "System",
+                "System.IO",
+            })
+                .WithOptimizationLevel(OptimizationLevel.Debug)
+                .WithPlatform(Platform.AnyCpu);
 
-            compilerParameters.ReferencedAssemblies.AddRange(refAssemblies.ToArray());
+            parserOption = CSharpParseOptions.Default.WithKind(SourceCodeKind.Script).WithLanguageVersion(LanguageVersion.Preview);
         }
 
-        public ExecuteResult Execute(string script, FumenVisualEditorViewModel targetEditor)
+        public Task<BuildResult> Build(BuildParam param)
         {
-            var compiler = IoC.Get<ICodeCompiler>();
-            var result = compiler.CompileAssemblyFromSource(compilerParameters, script);
+            Log.LogDebug($"-------BEGIN SCRIPT BUILD--------");
+            var overrideAssemblyLocations = assemblyReferenceList.ToList();
+            foreach (var newLoc in param.AssemblyLocations)
+                overrideAssemblyLocations.Add(MetadataReference.CreateFromFile(newLoc));
+            overrideAssemblyLocations.DistinctSelf();
 
-            if (result.Errors.HasErrors)
-                return new(false, "无法编译脚本:" + Environment.NewLine + string.Join(Environment.NewLine, result.Errors));
+            overrideAssemblyLocations.ForEach(x => Log.LogDebug($"asmLoc: {x.Display}"));
 
-            var assembly = result.CompiledAssembly;
+            var encoding = Encoding.UTF8;
 
-            var scriptClass = assembly.GetTypes().FirstOrDefault(x => x.IsSubclassOf(typeof(EditorScriptBase)));
-            if (scriptClass is null)
-                return new(false, "无法找到EditorScriptBase类型");
+            var assemblyName = Path.GetRandomFileName();
+            var sourceCodePath = Path.ChangeExtension(assemblyName, "cs");
 
-            var scriptObj = LambdaActivator.CreateInstance(scriptClass) as EditorScriptBase;
-            if (scriptObj is null)
-                return new(false, $"无法构造{scriptClass.Name}类型的对象");
+            var buffer = encoding.GetBytes(param.Script);
+            var sourceText = SourceText.From(buffer, buffer.Length, encoding, canBeEmbedded: true);
 
-            return Execute(scriptObj, targetEditor);
-        }
-
-        public ExecuteResult Execute(EditorScriptBase script, FumenVisualEditorViewModel targetEditor)
-        {
-            if (targetEditor is null)
-                return new(false, "需要指定编辑器");
-
-            var ctx = new ScriptExecutionContext();
-            ctx.ScriptExecutor = this;
-            ctx.Editor = targetEditor;
-
-            var redo = new System.Action(() =>
+            return Task.Run(() =>
             {
-                script.OnExecuteOrEditorRedo(ctx);
+                var syntaxTree = CSharpSyntaxTree.ParseText(sourceText, parserOption, sourceCodePath);
+
+                var comp = CSharpCompilation.CreateScriptCompilation(
+                    assemblyName,
+                    syntaxTree,
+                    overrideAssemblyLocations,
+                    compilationOptions
+                );
+
+                var symbolsName = Path.ChangeExtension(assemblyName, "pdb");
+
+                var emitOptions = new EmitOptions(
+                            debugInformationFormat: DebugInformationFormat.PortablePdb,
+                            pdbFilePath: symbolsName);
+
+                var embeddedTexts = new List<EmbeddedText>
+                {
+                    EmbeddedText.FromSource(sourceCodePath, sourceText),
+                };
+
+                using var peStream = new MemoryStream();
+                using var pdbStream = new MemoryStream();
+
+                var emitResult = comp.Emit(peStream, pdbStream, embeddedTexts: embeddedTexts, options: emitOptions);
+                var diagnostics = emitResult.Diagnostics.ToArray();
+
+                if (!emitResult.Success)
+                    return new BuildResult(emitResult);
+
+                var assembly = Assembly.Load(peStream.ToArray(), pdbStream.ToArray());
+
+                Log.LogDebug($"-------END SCRIPT BUILD--------");
+                return new BuildResult(comp)
+                {
+                    Assembly = assembly,
+                    EntryPoint = comp.GetEntryPoint(default),
+                };
             });
+        }
 
-            var undo = new System.Action(() => script.OnEditorUndo(ctx));
+        public async Task<ExecuteResult> Execute(BuildParam param, FumenVisualEditorViewModel targetEditor)
+        {
+            var buildResult = await Build(param);
 
-            targetEditor.UndoRedoManager.ExecuteAction(LambdaUndoAction.Create($"执行脚本:{script.ScriptName}", redo, undo));
+            if (!buildResult.IsSuccess)
+                return new(false, "无法编译脚本:" + Environment.NewLine + string.Join(Environment.NewLine, buildResult.Errors));
 
-            return new(true);
+            var assembly = buildResult.Assembly;
+            if (assembly is null)
+                return new(false, "failed to generate assembly : " + Environment.NewLine + string.Join(Environment.NewLine, buildResult.Errors));
+
+            var result = await Execute(assembly, buildResult.EntryPoint);
+            return result;
+        }
+
+        private async Task<ExecuteResult> Execute(Assembly assembly, IMethodSymbol ep)
+        {
+            var epType = assembly.GetType($"{ep.ContainingNamespace.MetadataName}.{ep.ContainingType.MetadataName}");
+            var epMethod = epType.GetMethod(ep.MetadataName);
+            var name = $"{epType.GetTypeName()}.{epMethod.Name}()";
+
+            Log.LogDebug($"Script endpoint : {name}");
+
+            try
+            {
+                var func = epMethod.CreateDelegate(typeof(Func<object[], Task<object>>)) as Func<object[], Task<object>>;
+                Log.LogDebug($"Script begin call : {name}");
+                var obj = await func(new object[2]);
+                Log.LogDebug($"Script end call : {name}");
+                return new(true, null, obj);
+            }
+            catch (Exception e)
+            {
+                return new(false, e.Message);
+            }
         }
     }
 }
