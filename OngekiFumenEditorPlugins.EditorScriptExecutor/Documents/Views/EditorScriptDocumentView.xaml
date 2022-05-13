@@ -42,11 +42,11 @@
                     Margin="10,0,0,0"
                     VerticalAlignment="Center"
                     VerticalContentAlignment="Center"
-                    ItemsSource="{Binding CurrentEditors, StringFormat={}{FileName}}"
+                    ItemsSource="{Binding CurrentEditors, StringFormat={}{Name}}"
                     SelectedValue="{Binding CurrentSelectedEditor}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <Label Content="{Binding FileName}" />
+                            <Label Content="{Binding Name}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>

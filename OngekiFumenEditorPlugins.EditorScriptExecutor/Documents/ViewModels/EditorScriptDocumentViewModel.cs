@@ -32,15 +32,23 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
     [MapToView(ViewType = typeof(EditorScriptDocumentView))]
     public class EditorScriptDocumentViewModel : PersistedDocument
     {
-        public ICSharpCode.AvalonEdit.Document.TextDocument ScriptDocument { get; set; } = new();
-        public ObservableCollection<FumenVisualEditorViewModel> CurrentEditors { get; } = new ObservableCollection<FumenVisualEditorViewModel>();
+        public class EditorItem
+        {
+            public string Name => TargetEditor?.FileName ?? "<无编辑器目标>";
+            public FumenVisualEditorViewModel TargetEditor { get; set; }
+        }
 
-        private FumenVisualEditorViewModel currentSelectedEditor = default;
+        private static EditorItem DefaultEmpty { get; } = new EditorItem { };
+
+        public ICSharpCode.AvalonEdit.Document.TextDocument ScriptDocument { get; set; } = new();
+        public ObservableCollection<EditorItem> CurrentEditors { get; } = new();
+
+        private EditorItem currentSelectedEditor = default;
 
         CompletionWindow completionWindow = default;
         private IDocumentContext documentContext;
 
-        public FumenVisualEditorViewModel CurrentSelectedEditor
+        public EditorItem CurrentSelectedEditor
         {
             get => currentSelectedEditor;
             set
@@ -65,13 +73,15 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
 
         private void UpdateCurrentEditorList(FumenVisualEditorViewModel _ = default)
         {
+            var r = CurrentSelectedEditor;
             CurrentEditors.Clear();
+            CurrentEditors.Add(DefaultEmpty);
             foreach (var editor in IoC.Get<IEditorDocumentManager>().GetCurrentEditors())
-            {
-                CurrentEditors.Add(editor);
-            }
+                CurrentEditors.Add(new EditorItem() { TargetEditor = editor });
             if (!CurrentEditors.Contains(CurrentSelectedEditor))
                 CurrentSelectedEditor = default;
+            if (r == DefaultEmpty)
+                CurrentSelectedEditor = DefaultEmpty;
         }
 
         protected override async Task DoLoad(string filePath)
@@ -150,7 +160,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
                 return;
 
             using var _2 = StatusBarHelper.BeginStatus("Script is executing ...");
-            var executeResult = await IoC.Get<IEditorScriptExecutor>().Execute(buildResult, CurrentSelectedEditor);
+            var executeResult = await IoC.Get<IEditorScriptExecutor>().Execute(buildResult, CurrentSelectedEditor?.TargetEditor);
 
             MessageBox.Show($"执行{(executeResult.Success ? "成功" : $"失败,原因:{executeResult.ErrorMessage}")}");
         }
