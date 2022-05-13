@@ -5,6 +5,7 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <UseWPF>true</UseWPF>
     <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Target Condition="'$(Configuration)'=='DEBUG'" Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy &quot;$(ProjectDir)$(OutDir)*&quot; &quot;$(SolutionDir)refHost\OngekiFumenEditor\OngekiFumenEditor\bin\$(ConfigurationName)\net5.0-windows\Plugins\$(ProjectName)\&quot; /e /s /y" />
@@ -15,6 +16,8 @@
       <ExcludeAssets>runtime;</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Features" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>

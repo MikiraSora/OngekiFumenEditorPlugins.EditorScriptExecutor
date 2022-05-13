@@ -1,5 +1,14 @@
-﻿using System;
+﻿using ICSharpCode.AvalonEdit.CodeCompletion;
+using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Editing;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
+using OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,9 +20,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.Views 
+namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.Views
 {
     /// <summary>
     /// EditorScriptDocumentView.xaml 的交互逻辑
@@ -23,6 +31,9 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.Views
         public EditorScriptDocumentView()
         {
             InitializeComponent();
+
+            textEditor.TextArea.TextEntering += (s, e) => (DataContext as EditorScriptDocumentViewModel)?.TextArea_TextEntering(s, e);
+            textEditor.TextArea.TextEntered += (s, e) => (DataContext as EditorScriptDocumentViewModel)?.TextArea_TextEntered(s, e);
         }
     }
 }

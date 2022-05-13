@@ -1,5 +1,6 @@
 ﻿using Caliburn.Micro;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
@@ -9,6 +10,7 @@ using OngekiFumenEditor;
 using OngekiFumenEditor.Modules.FumenVisualEditor.Base;
 using OngekiFumenEditor.Modules.FumenVisualEditor.ViewModels;
 using OngekiFumenEditor.Utils;
+using OngekiFumenEditorPlugins.EditorScriptExecutor.Scripts;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -16,8 +18,10 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using Document = Microsoft.CodeAnalysis.Document;
 
 namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
 {
@@ -32,19 +36,24 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
 
         public DefaultEditorScriptExecutor()
         {
-            assemblyReferenceList = new List<MetadataReference>() {
-                MetadataReference.CreateFromFile(typeof(CodeCompiler).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(App).Assembly.Location),
-            };
+            assemblyReferenceList = new List<MetadataReference>();
 
-            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+            assemblyReferenceList.AddRange(AppDomain.CurrentDomain.GetAssemblies().Select(x =>
+            {
+                unsafe
+                {
+                    if (x.TryGetRawMetadata(out var b, out var length))
+                    {
+                        var moduleMetadata = ModuleMetadata.CreateFromMetadata((IntPtr)b, length);
+                        var assemblyMetadata = AssemblyMetadata.Create(moduleMetadata);
+                        var reference = assemblyMetadata.GetReference();
 
-            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "mscorlib.dll")));
-            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.dll")));
-            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Core.dll")));
-            assemblyReferenceList.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")));
+                        return reference;
+                    }
+                }
+
+                return default;
+            }).OfType<MetadataReference>());
 
             compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, usings: new[]{
                 "System",
@@ -63,13 +72,13 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
         {
             Log.LogDebug($"-------BEGIN SCRIPT BUILD--------");
             var overrideAssemblyLocations = assemblyReferenceList.ToList();
-            foreach (var newLoc in param.AssemblyLocations)
-                overrideAssemblyLocations.Add(MetadataReference.CreateFromFile(newLoc));
 
             var encoding = Encoding.UTF8;
 
             var assemblyName = Path.GetRandomFileName();
             var sourceCodePath = param.DisplayFileName ?? Path.ChangeExtension(assemblyName, "cs");
+            if (!sourceCodePath.EndsWith(".cs"))
+                sourceCodePath = sourceCodePath + ".cs";
 
             var buffer = encoding.GetBytes(param.Script);
             var sourceText = SourceText.From(buffer, buffer.Length, encoding, canBeEmbedded: true);
@@ -117,7 +126,6 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
                 var removedRoot = rootNode.RemoveNodes(removeTriviaSyntaxs, SyntaxRemoveOptions.KeepNoTrivia);
 
                 overrideAssemblyLocations.DistinctSelf();
-                overrideAssemblyLocations.ForEach(x => Log.LogDebug($"asmLoc: {x.Display}"));
 
                 var comp = CSharpCompilation.CreateScriptCompilation(
                     assemblyName,
@@ -132,9 +140,13 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
                             debugInformationFormat: DebugInformationFormat.PortablePdb,
                             pdbFilePath: symbolsName);
 
+                var content = removedRoot.GetText().ToString();
+                var newBuffer = encoding.GetBytes(content);
+                var newSourceText = SourceText.From(newBuffer, newBuffer.Length, encoding, canBeEmbedded: true);
+
                 var embeddedTexts = new List<EmbeddedText>
                 {
-                    EmbeddedText.FromSource(sourceCodePath, sourceText),
+                    EmbeddedText.FromSource(sourceCodePath, newSourceText),
                 };
 
                 using var peStream = new MemoryStream();
@@ -218,7 +230,9 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
             {
                 var func = epMethod.CreateDelegate(typeof(Func<object[], Task<object>>)) as Func<object[], Task<object>>;
                 Log.LogDebug($"Script begin call : {name}");
+                ScriptArgsGlobalStore.SetCurrentEditor(assembly, targetEditor);
                 var obj = await func(new object[2]);
+                ScriptArgsGlobalStore.Clear(assembly);
                 Log.LogDebug($"Script end call : {name}");
                 return new(true, null, obj);
             }
@@ -226,6 +240,33 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
             {
                 return new(false, e.Message);
             }
+        }
+
+        public Task<ExecuteResult> CodeComplete(BuildParam buildResult)
+        {
+            return default;
+        }
+
+        public Task<IDocumentContext> InitDocumentContext()
+        {
+            var ctx = new DefaultDocumentContext();
+
+            var workspace = new AdhocWorkspace();
+            var proj = workspace.AddProject(Path.GetRandomFileName(), "C#").AddMetadataReferences(assemblyReferenceList);
+
+            var sourceText = SourceText.From("");
+            CSharpSyntaxTree.ParseText(sourceText, new CSharpParseOptions()
+                .WithKind(SourceCodeKind.Script)
+                .WithLanguageVersion(LanguageVersion.Preview));
+            var doc = proj.AddDocument(Path.GetRandomFileName() + ".cs", sourceText);
+
+            var service = CompletionService.GetService(doc);
+
+            ctx.WorkSpace = workspace;
+            ctx.Document = doc;
+            ctx.CompletionService = service;
+
+            return Task.FromResult<IDocumentContext>(ctx);
         }
     }
 }

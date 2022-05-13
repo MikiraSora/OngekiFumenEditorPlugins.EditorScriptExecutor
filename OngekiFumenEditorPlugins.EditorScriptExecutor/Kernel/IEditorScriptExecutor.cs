@@ -11,5 +11,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel
     {
         Task<BuildResult> Build(BuildParam param);
         Task<ExecuteResult> Execute(BuildResult buildResult, FumenVisualEditorViewModel targetEditor);
+
+        Task<IDocumentContext> InitDocumentContext();
     }
 }

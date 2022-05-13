@@ -90,13 +90,13 @@
         </Grid>
 
         <avalonia:TextEditor
+            x:Name="textEditor"
             Grid.Row="1"
             cal:Message.Attach="[Event TextChanged]=[Action OnTextChanged]"
             Document="{Binding ScriptDocument}"
             FontFamily="Consolas"
             FontSize="16"
             ShowLineNumbers="True"
-            SyntaxHighlighting="C#">
-        </avalonia:TextEditor>
+            SyntaxHighlighting="C#" />
     </Grid>
 </UserControl>
