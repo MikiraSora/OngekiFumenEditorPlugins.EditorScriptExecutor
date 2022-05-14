@@ -194,6 +194,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
                     return;
                 }
                 await File.WriteAllTextAsync(filePath, ScriptDocument.Text);
+                IsDirty = false;
             }
             catch (Exception e)
             {
