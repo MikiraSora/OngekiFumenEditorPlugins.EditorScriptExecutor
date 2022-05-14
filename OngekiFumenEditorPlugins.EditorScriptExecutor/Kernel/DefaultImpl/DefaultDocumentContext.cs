@@ -53,24 +53,39 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
             }
 
             var root = ProjectRootElement.Create();
-            var group = root.AddPropertyGroup();
-            group.AddProperty("Configuration", "Debug");
-            group.AddProperty("Platform", "AnyCPU");
+            root.Sdk = "Microsoft.NET.Sdk";
 
-            AddItems(root, "Reference", "System", "System.Core");
+            var projCommonGroup = root.AddPropertyGroup();
+            projCommonGroup.AddProperty("TargetFramework", "net5.0-windows");
+            projCommonGroup.AddProperty("OutputType", "Exe");
 
-            //add script
-            AddItems(root, "Compile", scriptFilePath);
 
-            //todo: add dll/library reference
+            var refGroup = root.AddItemGroup();
+            //add references
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var name = assembly.GetName().Name;
 
-            //create build task
-            var target = root.AddTarget("Build");
-            var task = target.AddTask("Csc");
-            task.SetParameter("Sources", "@(Compile)");
-            task.SetParameter("OutputAssembly", "unused.dll");
+                //filter System.*
+                if (name.StartsWith("System."))
+                    continue;
 
-            //todo create rebuild task
+                try
+                {
+                    if (!File.Exists(assembly.Location))
+                        continue;
+                }
+                catch
+                {
+                    continue;
+                }
+
+
+
+                var refElement = refGroup.AddItem("Reference", name);
+                var hintPathElement = root.CreateMetadataElement("HintPath", assembly.Location);
+                refElement.AppendChild(hintPathElement);
+            }
 
             projFilePath = Path.Combine(genProjOutputDirPath, "Script.csproj");
             root.Save(projFilePath);
