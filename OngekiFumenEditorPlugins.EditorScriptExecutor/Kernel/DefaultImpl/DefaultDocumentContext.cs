@@ -43,15 +43,6 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
 
         public bool GenerateProjectFile(string genProjOutputDirPath, string scriptFilePath, out string projFilePath)
         {
-            void AddItems(ProjectRootElement elem, string groupName, params string[] items)
-            {
-                var group = elem.AddItemGroup();
-                foreach (var item in items)
-                {
-                    group.AddItem(groupName, item);
-                }
-            }
-
             var root = ProjectRootElement.Create();
             root.Sdk = "Microsoft.NET.Sdk";
 
@@ -77,10 +68,9 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
                 }
                 catch
                 {
+                    //in-memory assembly will throw NotSupportException
                     continue;
                 }
-
-
 
                 var refElement = refGroup.AddItem("Reference", name);
                 var hintPathElement = root.CreateMetadataElement("HintPath", assembly.Location);

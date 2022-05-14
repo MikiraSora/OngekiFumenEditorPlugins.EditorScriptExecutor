@@ -114,10 +114,18 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             if (!File.Exists(watchingCsFilePath))
                 return;
 
-            (GetView() as DispatcherObject)?.Dispatcher.Invoke(() =>
+            (GetView() as DispatcherObject)?.Dispatcher.Invoke(async () =>
             {
-                ScriptDocument.Text = File.ReadAllText(watchingCsFilePath);
-                Log.LogInfo($"sync .cs file content to script : {FileName} ({DisplayName})");
+                try
+                {
+                    ScriptDocument.Text = await File.ReadAllTextAsync(watchingCsFilePath);
+                    await DoSave(FilePath);
+                    Log.LogInfo($"sync .cs file content to script : {FileName} ({DisplayName})");
+                }
+                catch
+                {
+
+                }
             });
         }
 
@@ -157,10 +165,22 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             Init();
         }
 
-        protected override Task DoNew()
+        protected override async Task DoNew()
         {
             Init();
-            return TaskUtility.Completed;
+            try
+            {
+                var asmDirPath = Path.GetDirectoryName(typeof(EditorScriptDocumentViewModel).Assembly.Location);
+                var templateFilePath = Path.Combine(asmDirPath, "Resources", "NewScriptTemplate.nyagekiScript");
+                if (File.Exists(templateFilePath))
+                {
+                    ScriptDocument.Text = await File.ReadAllTextAsync(templateFilePath);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.LogDebug($"无法应用脚本模板,原因:{e.Message}");
+            }
         }
 
         protected override async Task DoSave(string filePath)
@@ -259,7 +279,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             Log.LogDebug($"csFilePath = {csFilePath}");
 
             Directory.CreateDirectory(projOutputDirPath);
-            await File.WriteAllTextAsync(csFilePath, ScriptDocument.Text);
+            await File.WriteAllTextAsync(csFilePath, ScriptDocument.Text, Encoding.UTF8);
 
             if (!documentContext.GenerateProjectFile(projOutputDirPath, csFilePath, out var projFilePath))
             {
