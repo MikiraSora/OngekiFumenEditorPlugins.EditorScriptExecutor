@@ -222,7 +222,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
 
         public async void OnVSEditButtonClicked()
         {
-            var projOutputDirPath = Path.Combine(Path.GetTempPath(), "ScriptTempProjects", Path.ChangeExtension(Path.GetRandomFileName(), null));
+            var projOutputDirPath = Path.Combine(Path.GetTempPath(), "NagekiFumenScriptTempProjects", Path.ChangeExtension(Path.GetRandomFileName(), null));
             var csFileName = Path.ChangeExtension("Script." + Path.GetRandomFileName(), "cs");
             var csFilePath = Path.Combine(projOutputDirPath, csFileName);
 
@@ -230,6 +230,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             Log.LogDebug($"csFileName = {csFileName}");
             Log.LogDebug($"csFilePath = {csFilePath}");
 
+            Directory.CreateDirectory(projOutputDirPath);
             await File.WriteAllTextAsync(csFilePath, ScriptDocument.Text);
 
             if (!documentContext.GenerateProjectFile(projOutputDirPath, csFilePath, out var projFilePath))
