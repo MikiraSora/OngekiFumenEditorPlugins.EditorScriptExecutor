@@ -1,6 +1,8 @@
 ﻿//学习本脚本语言: C# : https://dotnet.microsoft.com/en-us/learn/csharp
 //学习本脚本格式: C# Script : https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting
 
+// 如何使用? 编写脚本代码 -> 编译脚本 -> 钦定目标编辑器 -> 执行脚本！
+
 using Caliburn.Micro;
 using OngekiFumenEditor.Modules.FumenVisualEditor.Kernel;
 using OngekiFumenEditor.Utils;
