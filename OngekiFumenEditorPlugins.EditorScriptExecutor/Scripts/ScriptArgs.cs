@@ -11,6 +11,6 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Scripts
 {
     public static class ScriptArgs
     {
-        public static FumenVisualEditorViewModel ViewModel => ScriptArgsGlobalStore.GetCurrentEditor(Assembly.GetCallingAssembly());
+        public static FumenVisualEditorViewModel TargetEditor => ScriptArgsGlobalStore.GetCurrentEditor(Assembly.GetCallingAssembly());
     }
 }
