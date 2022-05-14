@@ -18,13 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Threading;
+using MessageBox = System.Windows.MessageBox;
 
 namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
 {
@@ -59,6 +63,51 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
         }
 
         public bool IsEnableRun => CurrentSelectedEditor is not null;
+
+        private FileSystemWatcher watcher;
+        private string watchingCsFileName;
+
+        public FileSystemWatcher Watcher
+        {
+            get => watcher;
+            set
+            {
+                if (watcher is not null)
+                {
+                    watcher.EnableRaisingEvents = false;
+                    watcher.Renamed -= SyncCSFileToScriptTextDocument;
+                    watcher.Error -= Watcher_Error;
+                }
+
+                Set(ref watcher, value);
+
+                if (Watcher is not null)
+                {
+                    Watcher.Renamed += SyncCSFileToScriptTextDocument;
+                    Watcher.Error += Watcher_Error;
+                    Watcher.EnableRaisingEvents = true;
+                }
+            }
+        }
+
+        private void Watcher_Error(object sender, ErrorEventArgs e)
+        {
+            Log.LogError($"CSFile watcher throw error.");
+            Watcher = null;
+        }
+
+        private void SyncCSFileToScriptTextDocument(object sender, RenamedEventArgs e)
+        {
+            if (e.Name == watchingCsFileName)
+            {
+                Log.LogInfo($"Sync .cs file content to script : {FileName} ({DisplayName})");
+                var view = GetView();
+                (view as DispatcherObject)?.Dispatcher.Invoke(() =>
+                {
+                    ScriptDocument.Text = File.ReadAllText(e.FullPath);
+                });
+            }
+        }
 
         public async void Init()
         {
@@ -169,6 +218,46 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
         {
             if (File.Exists(FilePath))
                 await DoLoad(FilePath);
+        }
+
+        public async void OnVSEditButtonClicked()
+        {
+            var projOutputDirPath = Path.Combine(Path.GetTempPath(), "ScriptTempProjects", Path.ChangeExtension(Path.GetRandomFileName(), null));
+            var csFileName = Path.ChangeExtension("Script." + Path.GetRandomFileName(), "cs");
+            var csFilePath = Path.Combine(projOutputDirPath, csFileName);
+
+            Log.LogDebug($"projOutputDirPath = {projOutputDirPath}");
+            Log.LogDebug($"csFileName = {csFileName}");
+            Log.LogDebug($"csFilePath = {csFilePath}");
+
+            await File.WriteAllTextAsync(csFilePath, ScriptDocument.Text);
+
+            if (!documentContext.GenerateProjectFile(projOutputDirPath, csFilePath, out var projFilePath))
+            {
+                MessageBox.Show("生成脚本项目文件失败.");
+                return;
+            }
+
+            Log.LogDebug($"projFilePath = {projFilePath}");
+
+            try
+            {
+                //watch new file
+                var watcher = new FileSystemWatcher(Path.GetDirectoryName(csFilePath));
+                watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+                watchingCsFileName = csFileName;
+                watcher.Filter = "*.cs";
+                Watcher = watcher;
+
+                Process.Start(new ProcessStartInfo(projFilePath)
+                {
+                    UseShellExecute = true
+                });
+            }
+            catch
+            {
+
+            }
         }
 
         internal async void TextArea_TextEntered(object sender, TextCompositionEventArgs e)
