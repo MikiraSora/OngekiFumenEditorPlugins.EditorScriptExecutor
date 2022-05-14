@@ -125,7 +125,10 @@
                     FontWeight="Bold">
                     当前正在使用外部编辑器中....
                 </TextBlock>
-                <StackPanel Orientation="Horizontal">
+                <TextBlock HorizontalAlignment="Center" FontSize="15">
+                    为了避免代码混乱,您暂时无法同时操作本编辑器
+                </TextBlock>
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                     <Button
                         Margin="0,5,0,0"
                         Padding="10,2,10,2"
@@ -159,7 +162,6 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-
             </StackPanel>
         </Grid>
     </Grid>
