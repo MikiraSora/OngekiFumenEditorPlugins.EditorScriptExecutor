@@ -62,13 +62,15 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
             //add script
             AddItems(root, "Compile", scriptFilePath);
 
-            //todo: add dll/reference
+            //todo: add dll/library reference
 
             //create build task
             var target = root.AddTarget("Build");
             var task = target.AddTask("Csc");
             task.SetParameter("Sources", "@(Compile)");
             task.SetParameter("OutputAssembly", "unused.dll");
+
+            //todo create rebuild task
 
             projFilePath = Path.Combine(genProjOutputDirPath, "Script.csproj");
             root.Save(projFilePath);

@@ -65,7 +65,8 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
         public bool IsEnableRun => CurrentSelectedEditor is not null;
 
         private FileSystemWatcher watcher;
-        private string watchingCsFileName;
+        private string watchingCsFilePath;
+        private string currentProjFilePath;
 
         public FileSystemWatcher Watcher
         {
@@ -87,8 +88,12 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
                     Watcher.Error += Watcher_Error;
                     Watcher.EnableRaisingEvents = true;
                 }
+
+                NotifyOfPropertyChange(() => IsUsingWatcher);
             }
         }
+
+        public bool IsUsingWatcher => watchingCsFilePath is not null;
 
         private void Watcher_Error(object sender, ErrorEventArgs e)
         {
@@ -96,16 +101,23 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             Watcher = null;
         }
 
+        public void SyncCsFileToScriptContent()
+        {
+            if (!File.Exists(watchingCsFilePath))
+                return;
+
+            (GetView() as DispatcherObject)?.Dispatcher.Invoke(() =>
+            {
+                ScriptDocument.Text = File.ReadAllText(watchingCsFilePath);
+            });
+        }
+
         private void SyncCSFileToScriptTextDocument(object sender, RenamedEventArgs e)
         {
-            if (e.Name == watchingCsFileName)
+            if (e.Name == Path.GetFileName(watchingCsFilePath))
             {
-                Log.LogInfo($"Sync .cs file content to script : {FileName} ({DisplayName})");
-                var view = GetView();
-                (view as DispatcherObject)?.Dispatcher.Invoke(() =>
-                {
-                    ScriptDocument.Text = File.ReadAllText(e.FullPath);
-                });
+                Log.LogInfo($"Auto sync .cs file content to script : {FileName} ({DisplayName})");
+                SyncCsFileToScriptContent();
             }
         }
 
@@ -222,6 +234,16 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
 
         public async void OnVSEditButtonClicked()
         {
+            if (IsUsingWatcher && File.Exists(currentProjFilePath))
+            {
+                Process.Start(new ProcessStartInfo(currentProjFilePath)
+                {
+                    UseShellExecute = true
+                });
+
+                return;
+            }
+
             var projOutputDirPath = Path.Combine(Path.GetTempPath(), "NagekiFumenScriptTempProjects", Path.ChangeExtension(Path.GetRandomFileName(), null));
             var csFileName = Path.ChangeExtension("Script." + Path.GetRandomFileName(), "cs");
             var csFilePath = Path.Combine(projOutputDirPath, csFileName);
@@ -246,7 +268,8 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
                 //watch new file
                 var watcher = new FileSystemWatcher(Path.GetDirectoryName(csFilePath));
                 watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.CreationTime | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-                watchingCsFileName = csFileName;
+                watchingCsFilePath = csFilePath;
+                currentProjFilePath = projFilePath;
                 watcher.Filter = "*.cs";
                 Watcher = watcher;
 
@@ -295,6 +318,16 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
                     completionWindow.CompletionList.RequestInsertion(e);
                 }
             }
+        }
+
+        public void OnStopCsFileButtonClicked()
+        {
+            //sync last time.
+            SyncCsFileToScriptContent();
+
+            currentProjFilePath = null;
+            watchingCsFilePath = null;
+            Watcher = null;
         }
     }
 }

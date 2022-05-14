@@ -113,5 +113,54 @@
             FontSize="16"
             ShowLineNumbers="True"
             SyntaxHighlighting="C#" />
+
+        <Grid
+            Grid.Row="2"
+            Background="#ACF0F0F0"
+            Visibility="{Binding IsUsingWatcher, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="20"
+                    FontWeight="Bold">
+                    当前正在使用外部编辑器中....
+                </TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        Margin="0,5,0,0"
+                        Padding="10,2,10,2"
+                        HorizontalAlignment="Center"
+                        cal:Message.Attach="SyncCsFileToScriptContent()">
+                        <StackPanel Orientation="Horizontal">
+                            <Label
+                                VerticalAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                FontFamily="Segoe UI Symbol"
+                                Foreground="Salmon">
+                                
+                            </Label>
+                            <Label VerticalAlignment="Center" VerticalContentAlignment="Center">手动同步内容</Label>
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Margin="5,5,0,0"
+                        Padding="10,2,10,2"
+                        HorizontalAlignment="Center"
+                        cal:Message.Attach="OnStopCsFileButtonClicked()">
+                        <StackPanel Orientation="Horizontal">
+                            <Label
+                                VerticalAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                FontFamily="Segoe UI Symbol"
+                                Foreground="MediumVioletRed">
+                                
+                            </Label>
+                            <Label VerticalAlignment="Center" VerticalContentAlignment="Center">中止外部编辑</Label>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>
