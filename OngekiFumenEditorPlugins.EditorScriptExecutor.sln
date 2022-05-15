@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OngekiFumenEditorPlugins.EditorScriptExecutor", "OngekiFumenEditorPlugins.EditorScriptExecutor\OngekiFumenEditorPlugins.EditorScriptExecutor.csproj", "{2540C3BC-5516-419D-B81F-AF198E7EEF6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OngekiFumenEditorPlugins.EditorScriptExecutor", "src\OngekiFumenEditorPlugins.EditorScriptExecutor.csproj", "{2540C3BC-5516-419D-B81F-AF198E7EEF6A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OngekiFumenEditor", "refHost\OngekiFumenEditor\OngekiFumenEditor\OngekiFumenEditor.csproj", "{38576B43-BF8B-4401-AEA0-705B94241536}"
 EndProject
