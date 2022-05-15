@@ -1,0 +1,112 @@
+/*
+  将一定范围内的轨道转换成Yuzu黄色轨道
+*/
+
+using Caliburn.Micro;
+using OngekiFumenEditor.Base;
+using OngekiFumenEditor.Base.EditorObjects.LaneCurve;
+using OngekiFumenEditor.Base.OngekiObjects;
+using OngekiFumenEditor.Base.OngekiObjects.ConnectableObject;
+using OngekiFumenEditor.Base.OngekiObjects.Lane;
+using OngekiFumenEditor.Base.OngekiObjects.Lane.Base;
+using OngekiFumenEditor.Modules.FumenVisualEditor.Base;
+using OngekiFumenEditor.Modules.FumenVisualEditor.Kernel;
+using OngekiFumenEditor.Utils;
+using OngekiFumenEditorPlugins.EditorScriptExecutor.Scripts;
+using System;
+using System.Linq;
+using System.Windows;
+
+//获取编辑器目标对象
+var targetEditor = ScriptArgs.TargetEditor;
+if (targetEditor is null)
+{
+    Log.LogInfo("没钦定编辑器，跳过");
+    return;
+}
+
+var fumen = targetEditor.Fumen;
+
+//选取指定条件的轨道
+var minXGrid = new XGrid(-9, 0);
+var maxXGrid = new XGrid(9, 0);
+var minTGrid = new TGrid(22, 499);
+var maxTGrid = new TGrid(22, 679);
+
+var laneStarts = fumen.Lanes
+    .Where(x => x.TGrid >= minTGrid && x.TGrid <= maxTGrid)
+    .Where(x => x.XGrid >= minXGrid && x.XGrid <= maxXGrid);
+
+//转换轨道成另一种轨道
+
+LaneStartBase CloneNewLaneWithOtherLaneType(LaneStartBase laneStart, LaneType laneType)
+{
+    LaneStartBase newLaneStart = laneType switch
+    {
+        LaneType.Left => new LaneLeftStart(),
+        LaneType.Right => new LaneRightStart(),
+        LaneType.Center => new LaneCenterStart(),
+        LaneType.Colorful => new ColorfulLaneStart(),
+        _ => default,
+    };
+
+    if (newLaneStart is null)
+        return default;
+
+    newLaneStart.Copy(laneStart, fumen);
+
+    foreach (var child in laneStart.Children)
+    {
+        var newChild = LambdaActivator.CreateInstance(child is ConnectableEndObject ? newLaneStart.EndType : newLaneStart.NextType) as ConnectableChildObjectBase;
+        newChild.Copy(child, fumen);
+
+        newLaneStart.AddChildObject(newChild);
+    }
+
+    return newLaneStart;
+}
+
+var targetLaneType = LaneType.Colorful;
+
+var affactedLaneStartPairs = laneStarts.Select(x => new
+{
+    OldLane = x,
+    NewLane = CloneNewLaneWithOtherLaneType(x, targetLaneType)
+}).Where(x => x.NewLane is not null).ToArray();
+
+if (affactedLaneStartPairs.None())
+{
+    Log.LogInfo($"无目标生成");
+    return;
+}
+
+foreach (var colorfulLaneStart in affactedLaneStartPairs.Select(x => x.NewLane).OfType<ColorfulLaneStart>())
+{
+    foreach (var colorfulObj in colorfulLaneStart.Children.OfType<IColorfulLane>().Append(colorfulLaneStart))
+    {
+        colorfulObj.Brightness = 3;
+        colorfulObj.ColorId = ColorIdConst.Yuzu;
+    }
+}
+
+targetEditor.UndoRedoManager.ExecuteAction(LambdaUndoAction.Create("批量转换轨道类型", () =>
+{
+    foreach (var pair in affactedLaneStartPairs)
+    {
+        fumen.RemoveObject(pair.OldLane);
+        fumen.AddObject(pair.NewLane);
+    }
+
+    targetEditor.Redraw(RedrawTarget.OngekiObjects);
+    targetEditor.IsDirty = true;
+}, () =>
+{
+    foreach (var pair in affactedLaneStartPairs)
+    {
+        fumen.RemoveObject(pair.NewLane);
+        fumen.AddObject(pair.OldLane);
+    }
+
+    targetEditor.Redraw(RedrawTarget.OngekiObjects);
+    targetEditor.IsDirty = true;
+}));
