@@ -73,8 +73,9 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
                 }
 
                 var refElement = refGroup.AddItem("Reference", name);
-                var hintPathElement = root.CreateMetadataElement("HintPath", assembly.Location);
-                refElement.AppendChild(hintPathElement);
+
+                refElement.AppendChild(root.CreateMetadataElement("HintPath", assembly.Location));
+                refElement.AppendChild(root.CreateMetadataElement("Private", "false"));
             }
 
             projFilePath = Path.Combine(genProjOutputDirPath, "Script.csproj");
