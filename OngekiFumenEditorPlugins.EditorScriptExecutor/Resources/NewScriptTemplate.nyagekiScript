@@ -31,4 +31,4 @@ foreach (var editor in editorManager.GetCurrentEditors())
     Log.LogInfo($"* {editor.FileName} ({editor.FilePath})");
 }
 
-Log.LogDebug("Powered by C# Script, Rolsyn and MSBuild.");
+Log.LogDebug("Powered by C# Script, Roslyn and MSBuild.");
