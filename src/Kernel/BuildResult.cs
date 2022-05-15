@@ -15,18 +15,19 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel
 {
     public struct BuildResult
     {
-        public BuildResult()
+        public BuildResult(IEnumerable<Diagnostic> errors, IEnumerable<Diagnostic> warnings)
         {
             EntryPoint = default;
             Assembly = default;
-            Errors = Enumerable.Empty<Diagnostic>();
-            Warnings = Enumerable.Empty<Diagnostic>();
+            Errors = errors;
+            Warnings = warnings;
         }
 
-        public BuildResult(EmitResult emitResult) : this()
+        public BuildResult(EmitResult emitResult)
+            : this(emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList(),
+                  emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Warning).ToList())
         {
-            Errors = emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
-            Warnings = emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Warning).ToList();
+
         }
 
         public BuildResult(CSharpCompilation comp) : this()
