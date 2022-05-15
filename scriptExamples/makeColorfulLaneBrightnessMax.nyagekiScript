@@ -1,0 +1,19 @@
+using Caliburn.Micro;
+using OngekiFumenEditor.Base.OngekiObjects.Lane;
+using OngekiFumenEditor.Modules.FumenVisualEditor.Kernel;
+using OngekiFumenEditor.Utils;
+using OngekiFumenEditorPlugins.EditorScriptExecutor.Scripts;
+using System;
+using System.Linq;
+
+//获取编辑器目标对象
+var targetEditor = ScriptArgs.TargetEditor;
+if (targetEditor is null)
+{
+    Log.LogInfo("无目标编辑器，跳过");
+    return;
+}
+
+//钦定谱面所有ColofulLane颜色线都是最大亮度的
+var colorfulObjects = targetEditor.Fumen.Lanes.OfType<ColorfulLaneStart>().SelectMany(x => x.Children.OfType<IColorfulLane>().Prepend(x));
+colorfulObjects.ForEach(x => x.Brightness = 3);
