@@ -107,7 +107,7 @@
         <avalonia:TextEditor
             x:Name="textEditor"
             Grid.Row="1"
-            cal:Message.Attach="[Event TextChanged]=[Action OnTextChanged]"
+            cal:Message.Attach="[Event TextChanged]=[Action OnTextChanged];[Key Space]=[Action OnSpaceKeyDown($executionContext)] "
             Document="{Binding ScriptDocument}"
             FontFamily="Consolas"
             FontSize="16"

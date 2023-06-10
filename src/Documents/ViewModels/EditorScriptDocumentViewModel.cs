@@ -28,6 +28,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 
 namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
@@ -38,7 +39,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
     {
         public class EditorItem
         {
-            public string Name => TargetEditor?.FileName ?? "<无编辑器目标>";
+            public string Name => TargetEditor?.DisplayName ?? "<无编辑器目标>";
             public FumenVisualEditorViewModel TargetEditor { get; set; }
         }
 
@@ -355,6 +356,20 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             currentProjFilePath = null;
             watchingCsFilePath = null;
             Watcher = null;
+        }
+
+        public void OnSpaceKeyDown(ActionExecutionContext e)
+        {
+            var itor = PresentationSource.CurrentSources.GetEnumerator();
+            if (itor.MoveNext())
+            {
+                /*
+                (e.View as UIElement).RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, itor.Current as PresentationSource, 0, Key.Space)
+                {
+                    RoutedEvent = UIElement.KeyDownEvent
+                });
+                */
+            }
         }
     }
 }
