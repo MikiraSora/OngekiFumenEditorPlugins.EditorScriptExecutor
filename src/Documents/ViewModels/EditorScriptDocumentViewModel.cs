@@ -272,9 +272,9 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
                 return;
             }
 
-            var projOutputDirPath = Path.Combine(Path.GetTempPath(), "NagekiFumenScriptTempProjects", Path.ChangeExtension(Path.GetRandomFileName(), null));
-            var scriptName = Path.GetFileNameWithoutExtension(currentProjFilePath);
-            var csFileName = Path.ChangeExtension($"Script.{scriptName}." + Path.GetRandomFileName(), "cs");
+            var scriptName = Path.GetFileNameWithoutExtension(FilePath);
+            var projOutputDirPath = TempFileHelper.GetTempFolderPath("ScriptTempProjects", scriptName);
+            var csFileName = $"Script.{scriptName}.cs";
             var csFilePath = Path.Combine(projOutputDirPath, csFileName);
 
             Log.LogDebug($"projOutputDirPath = {projOutputDirPath}");

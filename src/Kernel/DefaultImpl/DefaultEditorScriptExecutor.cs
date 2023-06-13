@@ -75,7 +75,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
 
             var encoding = Encoding.UTF8;
 
-            var assemblyName = Path.GetRandomFileName();
+            var assemblyName = TempFileHelper.GetTempFilePath("ScriptAssembly", param.DisplayFileName, ".dll");
             var sourceCodePath = param.DisplayFileName ?? Path.ChangeExtension(assemblyName, "cs");
             if (!sourceCodePath.EndsWith(".cs"))
                 sourceCodePath = sourceCodePath + ".cs";
@@ -252,13 +252,13 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
             var ctx = new DefaultDocumentContext();
 
             var workspace = new AdhocWorkspace();
-            var proj = workspace.AddProject(Path.GetRandomFileName(), "C#").AddMetadataReferences(assemblyReferenceList);
+            var proj = workspace.AddProject(TempFileHelper.GetTempFilePath("ScriptProjRef", "Project", ".proj"), "C#").AddMetadataReferences(assemblyReferenceList);
 
             var sourceText = SourceText.From("");
             CSharpSyntaxTree.ParseText(sourceText, new CSharpParseOptions()
                 .WithKind(SourceCodeKind.Script)
                 .WithLanguageVersion(LanguageVersion.Preview));
-            var doc = proj.AddDocument(Path.GetRandomFileName() + ".cs", sourceText);
+            var doc = proj.AddDocument(TempFileHelper.GetTempFilePath("ScriptProjDocument", "ScriptSource", ".cs"), sourceText);
 
             var service = CompletionService.GetService(doc);
 
