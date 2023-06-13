@@ -273,7 +273,8 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Documents.ViewModels
             }
 
             var projOutputDirPath = Path.Combine(Path.GetTempPath(), "NagekiFumenScriptTempProjects", Path.ChangeExtension(Path.GetRandomFileName(), null));
-            var csFileName = Path.ChangeExtension("Script." + Path.GetRandomFileName(), "cs");
+            var scriptName = Path.GetFileNameWithoutExtension(currentProjFilePath);
+            var csFileName = Path.ChangeExtension($"Script.{scriptName}." + Path.GetRandomFileName(), "cs");
             var csFilePath = Path.Combine(projOutputDirPath, csFileName);
 
             Log.LogDebug($"projOutputDirPath = {projOutputDirPath}");
