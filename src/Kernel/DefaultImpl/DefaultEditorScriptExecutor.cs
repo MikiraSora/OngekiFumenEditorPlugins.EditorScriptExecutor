@@ -75,7 +75,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel.DefaultImpl
 
             var encoding = Encoding.UTF8;
 
-            var assemblyName = TempFileHelper.GetTempFilePath("ScriptAssembly", param.DisplayFileName, ".dll");
+            var assemblyName = Path.GetRandomFileName();
             var sourceCodePath = param.DisplayFileName ?? Path.ChangeExtension(assemblyName, "cs");
             if (!sourceCodePath.EndsWith(".cs"))
                 sourceCodePath = sourceCodePath + ".cs";
