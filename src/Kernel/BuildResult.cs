@@ -42,7 +42,7 @@ namespace OngekiFumenEditorPlugins.EditorScriptExecutor.Kernel
 
         public IMethodSymbol EntryPoint { get; set; }
 
-        public bool IsSuccess => Errors.None();
+        public bool IsSuccess => Errors.IsEmpty();
 
         public Assembly Assembly { get; set; }
     }
