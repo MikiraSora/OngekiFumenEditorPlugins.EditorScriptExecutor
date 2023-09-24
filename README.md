@@ -1,3 +1,6 @@
+## 注意
+此项目已合并到[宿主项目](https://github.com/NyagekiFumenProject/OngekiFumenEditor)中
+
 ## 简介
   本项目为[编辑器](https://github.com/NyagekiFumenProject/OngekiFumenEditor)的插件项目，用于对编辑器添加脚本支持。
   用户可以通过自己编写以及执行脚本，对编辑器以及其他程序运行时资源进行操控。
